@@ -35,6 +35,11 @@ public class LevelLoader : MonoBehaviour
         {
             levelToLoad = levelSequence[Mathf.Clamp(currentLevelIndex, 0, levelSequence.Length - 1)];
         }
+
+        if (levelToLoad != null && levelSession != null)
+        {
+            levelSession.Initialize(levelToLoad);
+        }
     }
 
     [ContextMenu("Load Configured Level")]

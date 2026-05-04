@@ -14,13 +14,19 @@ public class LevelUIController : MonoBehaviour
 
     private void Awake()
     {
-        chickMesh = EnsureCounterMesh("chick counter_0", "ChickCounterText", new Vector3(0f, 0f, -0.2f));
-        levelMesh = EnsureCounterMesh("level counter_0", "LevelCounterText", new Vector3(0f, 0f, -0.2f));
-        timeMesh = EnsureCounterMesh("Time counter_0", "TimeCounterText", new Vector3(0f, 0f, -0.2f));
+        // Using your exact settings for the chick counter with default 0/0
+        chickMesh = EnsureCounterMesh("chick counter_0", "ChickCounterText", new Vector3(0.76f, -0.57f, -0.1f), new Vector3(2f, 2f, 1f), "Chicks 0/0");
+        
+        // Default settings for others
+        levelMesh = EnsureCounterMesh("level counter_0", "LevelCounterText", new Vector3(0f, 0f, -0.1f), Vector3.one, "Level 1");
+        timeMesh = EnsureCounterMesh("Time counter_0", "TimeCounterText", new Vector3(0f, 0f, -0.1f), Vector3.one, "0s");
     }
 
     public void SetChicks(int current, int required)
     {
+        if (chickMesh == null) 
+            chickMesh = EnsureCounterMesh("chick counter_0", "ChickCounterText", new Vector3(0.76f, -0.57f, -0.1f), new Vector3(2f, 2f, 1f), "Chicks 0/0");
+
         string text = $"Chicks {current}/{required}";
         if (chickCounterText != null)
         {
@@ -34,6 +40,9 @@ public class LevelUIController : MonoBehaviour
 
     public void SetLevel(int levelNumber)
     {
+        if (levelMesh == null)
+            levelMesh = EnsureCounterMesh("level counter_0", "LevelCounterText", new Vector3(0f, 0f, -0.1f), Vector3.one, "Level 1");
+
         string text = $"Level {levelNumber}";
         if (levelCounterText != null)
         {
@@ -47,6 +56,9 @@ public class LevelUIController : MonoBehaviour
 
     public void SetTimeSeconds(int seconds)
     {
+        if (timeMesh == null)
+            timeMesh = EnsureCounterMesh("Time counter_0", "TimeCounterText", new Vector3(0f, 0f, -0.1f), Vector3.one, "0s");
+
         string text = $"{Mathf.Max(0, seconds)}s";
         if (timeCounterText != null)
         {
@@ -73,35 +85,78 @@ public class LevelUIController : MonoBehaviour
         }
     }
 
-    private static TextMesh EnsureCounterMesh(string anchorName, string childName, Vector3 localOffset)
+    private static TextMesh EnsureCounterMesh(string anchorName, string childName, Vector3 localOffset, Vector3 localScale, string defaultText)
     {
+        // More robust search: GameObject.Find only finds active objects.
+        // Let's search all objects to be sure.
         GameObject anchor = GameObject.Find(anchorName);
         if (anchor == null)
         {
+            // Fallback: search by tag or type if name fails
+            GameObject[] allObjects = GameObject.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (GameObject obj in allObjects)
+            {
+                if (obj.name == anchorName)
+                {
+                    anchor = obj;
+                    break;
+                }
+            }
+        }
+
+        if (anchor == null)
+        {
+            Debug.LogWarning($"LevelUIController: Could not find anchor '{anchorName}' in the scene!");
             return null;
         }
 
         Transform child = anchor.transform.Find(childName);
+        GameObject go;
+        bool isNew = false;
         if (child == null)
         {
-            GameObject go = new GameObject(childName);
+            go = new GameObject(childName);
             go.transform.SetParent(anchor.transform);
-            go.transform.localPosition = localOffset;
-            go.transform.localScale = Vector3.one * 0.2f;
-            child = go.transform;
+            isNew = true;
+            Debug.Log($"LevelUIController: Created new text object '{childName}' under '{anchorName}'");
+        }
+        else
+        {
+            go = child.gameObject;
         }
 
-        TextMesh mesh = child.GetComponent<TextMesh>();
+        // Force exact position and scale from parameters
+        go.transform.localPosition = localOffset;
+        go.transform.localScale = localScale;
+
+        TextMesh mesh = go.GetComponent<TextMesh>();
         if (mesh == null)
         {
-            mesh = child.gameObject.AddComponent<TextMesh>();
+            mesh = go.AddComponent<TextMesh>();
         }
 
+        // Set default text if it was just created or if it's currently empty
+        if (isNew || string.IsNullOrEmpty(mesh.text))
+        {
+            mesh.text = defaultText;
+        }
+
+        // Apply visual settings for high quality and centering
         mesh.fontSize = 64;
-        mesh.characterSize = 0.15f;
+        mesh.characterSize = 0.08f;
         mesh.anchor = TextAnchor.MiddleCenter;
         mesh.alignment = TextAlignment.Center;
-        mesh.color = Color.black;
+        
+        // Set Color to Dark Brown
+        mesh.color = new Color(0.39f, 0.26f, 0.13f, 1.0f);
+
+        // Fix Visibility: Ensure it renders on top of the sprite panel
+        MeshRenderer renderer = go.GetComponent<MeshRenderer>();
+        if (renderer != null)
+        {
+            renderer.sortingLayerName = "Default";
+            renderer.sortingOrder = 20;
+        }
 
         return mesh;
     }
