@@ -21,7 +21,7 @@ public class LevelLoader : MonoBehaviour
     [SerializeField] private GameObject enemyPrefab;
     [SerializeField] private GameObject basketPrefab;
 
-    public bool CanLoadConfiguredLevel => levelToLoad != null && levelSession != null && platformPrefab != null && chickPrefab != null && enemyPrefab != null && basketPrefab != null;
+    public bool CanLoadConfiguredLevel => levelToLoad != null && levelSession != null;
 
     private void Awake()
     {
@@ -68,9 +68,9 @@ public class LevelLoader : MonoBehaviour
     public void LoadLevel(LevelData levelData)
     {
         AutoWire();
-        if (levelData == null || levelSession == null || platformPrefab == null || chickPrefab == null || enemyPrefab == null || basketPrefab == null)
+        if (levelData == null || levelSession == null)
         {
-            Debug.LogError("LevelLoader is missing required references.");
+            Debug.LogError("LevelLoader is missing required level data or session reference.");
             return;
         }
 
@@ -86,10 +86,12 @@ public class LevelLoader : MonoBehaviour
         EnsureHierarchy();
         ClearRuntimeObjects();
 
-        SpawnPlatforms(levelData);
-        SpawnChicks(levelData);
-        SpawnEnemy(levelData);
-        SpawnBasket(levelData);
+        if (platformPrefab != null) SpawnPlatforms(levelData);
+        if (chickPrefab != null) SpawnChicks(levelData);
+        if (enemyPrefab != null) SpawnEnemy(levelData);
+        if (basketPrefab != null) SpawnBasket(levelData);
+
+        ResetManualObjects();
 
         if (player != null)
         {
@@ -254,5 +256,22 @@ public class LevelLoader : MonoBehaviour
         go.transform.SetParent(parent);
         go.transform.localPosition = Vector3.zero;
         return go.transform;
+    }
+
+    private void ResetManualObjects()
+    {
+        // Reset all chicks in the scene (manual or spawned)
+        ChickCollectible[] allChicks = FindObjectsByType<ChickCollectible>(FindObjectsSortMode.None);
+        foreach (var chick in allChicks)
+        {
+            chick.ResetCollectible();
+        }
+
+        // Reset the player's chain
+        ChickChainController chain = FindFirstObjectByType<ChickChainController>();
+        if (chain != null)
+        {
+            chain.ResetChain();
+        }
     }
 }

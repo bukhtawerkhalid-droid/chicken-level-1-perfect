@@ -108,4 +108,11 @@ public class ChickChainController : MonoBehaviour
             follower.position = Vector3.Lerp(follower.position, target, followSpeed * Time.deltaTime);
         }
     }
+
+    public void ResetChain()
+    {
+        followers.Clear();
+        history.Clear();
+        history.Add(transform.position);
+    }
 }
