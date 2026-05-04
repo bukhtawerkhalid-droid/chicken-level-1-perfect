@@ -17,9 +17,11 @@ public class LevelUIController : MonoBehaviour
         // Using your exact settings for the chick counter with default 0/0
         chickMesh = EnsureCounterMesh("chick counter_0", "ChickCounterText", new Vector3(0.76f, -0.57f, -0.1f), new Vector3(2f, 2f, 1f), "Chicks 0/0");
         
-        // Default settings for others
-        levelMesh = EnsureCounterMesh("level counter_0", "LevelCounterText", new Vector3(0f, 0f, -0.1f), Vector3.one, "Level 1");
-        timeMesh = EnsureCounterMesh("Time counter_0", "TimeCounterText", new Vector3(0f, 0f, -0.1f), Vector3.one, "0s");
+        // Using your exact settings for the level counter
+        levelMesh = EnsureCounterMesh("level counter_0", "LevelCounterText", new Vector3(0.2f, -0.18f, -0.1f), new Vector3(2f, 2f, 1f), "Level 1");
+
+        // Using your exact settings for the time counter (Higher scale to compensate for the small parent)
+        timeMesh = EnsureCounterMesh("Time counter_0", "TimeCounterText", new Vector3(2.13f, -0.58f, -0.1f), new Vector3(3f, 3f, 1f), "0s");
     }
 
     public void SetChicks(int current, int required)
