@@ -12,9 +12,12 @@ public class PlayerMover2D : MonoBehaviour
 
     public bool IsInputEnabled { get; set; } = true;
 
+    private SpriteRenderer spriteRenderer;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     private void Update()
@@ -31,6 +34,12 @@ public class PlayerMover2D : MonoBehaviour
         {
             if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed) moveInputX -= 1f;
             if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed) moveInputX += 1f;
+        }
+
+        if (moveInputX != 0)
+        {
+            // Inverted logic: Sprite faces Left by default, so flip when moving Right (> 0)
+            spriteRenderer.flipX = moveInputX > 0;
         }
     }
 

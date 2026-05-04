@@ -94,6 +94,17 @@ public class ChickChainController : MonoBehaviour
 
             int historyIndex = Mathf.Min((i + 1) * pointsPerSegment, history.Count - 1);
             Vector3 target = history[historyIndex];
+            
+            // Handle visual orientation
+            if (Mathf.Abs(target.x - follower.position.x) > 0.01f)
+            {
+                SpriteRenderer sr = follower.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                {
+                    sr.flipX = target.x < follower.position.x;
+                }
+            }
+
             follower.position = Vector3.Lerp(follower.position, target, followSpeed * Time.deltaTime);
         }
     }
