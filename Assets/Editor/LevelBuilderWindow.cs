@@ -49,7 +49,10 @@ public class LevelBuilderWindow : EditorWindow
 
         data.playerStartPosition = FindPlayerPosition();
         data.basketPosition = FindSinglePosition("Exit_basket_0", "Basket");
-        data.enemyPosition = FindSinglePosition("Enemy", "Cat");
+        
+        // Capture all enemies (supporting both "Enemy" and "Cat" prefixes)
+        data.enemyPositions = FindPositionsByPrefix("Enemy");
+        data.enemyPositions.AddRange(FindPositionsByPrefix("Cat"));
 
         string path = AssetDatabase.GenerateUniqueAssetPath($"{saveFolder}/{assetName}.asset");
         AssetDatabase.CreateAsset(data, path);

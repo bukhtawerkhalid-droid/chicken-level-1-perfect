@@ -88,7 +88,7 @@ public class LevelLoader : MonoBehaviour
 
         if (platformPrefab != null) SpawnPlatforms(levelData);
         if (chickPrefab != null) SpawnChicks(levelData);
-        if (enemyPrefab != null) SpawnEnemy(levelData);
+        if (enemyPrefab != null) SpawnEnemies(levelData);
         if (basketPrefab != null) SpawnBasket(levelData);
 
         ResetManualObjects();
@@ -174,19 +174,22 @@ public class LevelLoader : MonoBehaviour
         }
     }
 
-    private void SpawnEnemy(LevelData levelData)
+    private void SpawnEnemies(LevelData levelData)
     {
-        GameObject enemy = Instantiate(enemyPrefab, levelData.enemyPosition, Quaternion.identity, actorsRoot);
-        CapsuleCollider2D cap = enemy.GetComponent<CapsuleCollider2D>();
-        if (cap == null)
+        foreach (Vector2 pos in levelData.enemyPositions)
         {
-            cap = enemy.AddComponent<CapsuleCollider2D>();
-        }
-        cap.isTrigger = true;
+            GameObject enemy = Instantiate(enemyPrefab, pos, Quaternion.identity, actorsRoot);
+            CapsuleCollider2D cap = enemy.GetComponent<CapsuleCollider2D>();
+            if (cap == null)
+            {
+                cap = enemy.AddComponent<CapsuleCollider2D>();
+            }
+            cap.isTrigger = true;
 
-        if (enemy.GetComponent<EnemyHazard>() == null)
-        {
-            enemy.AddComponent<EnemyHazard>();
+            if (enemy.GetComponent<EnemyHazard>() == null)
+            {
+                enemy.AddComponent<EnemyHazard>();
+            }
         }
     }
 

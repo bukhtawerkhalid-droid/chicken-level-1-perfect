@@ -12,7 +12,7 @@ public class LevelData : ScriptableObject
     public List<Vector2> chickPositions = new List<Vector2>();
     public Vector2 playerStartPosition;
     public Vector2 basketPosition;
-    public Vector2 enemyPosition;
+    public List<Vector2> enemyPositions = new List<Vector2>();
 
     [Header("Rules")]
     public int minChicksRequired = 1;
