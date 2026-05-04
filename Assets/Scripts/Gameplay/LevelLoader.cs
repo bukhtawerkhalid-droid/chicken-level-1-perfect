@@ -4,6 +4,8 @@ public class LevelLoader : MonoBehaviour
 {
     [Header("Level")]
     [SerializeField] private LevelData levelToLoad;
+    [SerializeField] private LevelData[] levelSequence;
+    [SerializeField] private int currentLevelIndex;
 
     [Header("Scene References")]
     [SerializeField] private Transform player;
@@ -19,34 +21,61 @@ public class LevelLoader : MonoBehaviour
     [SerializeField] private GameObject enemyPrefab;
     [SerializeField] private GameObject basketPrefab;
 
+    public bool CanLoadConfiguredLevel => levelToLoad != null && levelSession != null && platformPrefab != null && chickPrefab != null && enemyPrefab != null && basketPrefab != null;
+
     private void Awake()
     {
+        AutoWire();
         EnsureHierarchy();
     }
 
     private void Start()
     {
-        if (levelToLoad != null)
+        if (levelToLoad == null && levelSequence != null && levelSequence.Length > 0)
         {
-            LoadLevel(levelToLoad);
+            levelToLoad = levelSequence[Mathf.Clamp(currentLevelIndex, 0, levelSequence.Length - 1)];
         }
     }
 
     [ContextMenu("Load Configured Level")]
     public void LoadConfiguredLevel()
     {
+        AutoWire();
         if (levelToLoad != null)
         {
             LoadLevel(levelToLoad);
         }
     }
 
+    public void LoadNextLevel()
+    {
+        if (levelSequence == null || levelSequence.Length == 0)
+        {
+            LoadConfiguredLevel();
+            return;
+        }
+
+        currentLevelIndex = (currentLevelIndex + 1) % levelSequence.Length;
+        levelToLoad = levelSequence[currentLevelIndex];
+        LoadConfiguredLevel();
+    }
+
     public void LoadLevel(LevelData levelData)
     {
+        AutoWire();
         if (levelData == null || levelSession == null || platformPrefab == null || chickPrefab == null || enemyPrefab == null || basketPrefab == null)
         {
             Debug.LogError("LevelLoader is missing required references.");
             return;
+        }
+
+        if (player == null)
+        {
+            GameObject foundPlayer = GameObject.FindWithTag("Player");
+            if (foundPlayer != null)
+            {
+                player = foundPlayer.transform;
+            }
         }
 
         EnsureHierarchy();
@@ -60,6 +89,15 @@ public class LevelLoader : MonoBehaviour
         if (player != null)
         {
             player.position = levelData.playerStartPosition;
+            player.gameObject.SetActive(true);
+
+            Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
+            if (playerRb != null)
+            {
+                playerRb.linearVelocity = Vector2.zero;
+                playerRb.angularVelocity = 0f;
+            }
+
             if (player.GetComponent<ChickChainController>() == null)
             {
                 player.gameObject.AddComponent<ChickChainController>();
@@ -68,9 +106,32 @@ public class LevelLoader : MonoBehaviour
             {
                 player.gameObject.AddComponent<ScreenWrap2D>();
             }
+            Debug.Log($"LevelLoader: Player reset to {levelData.playerStartPosition}");
+        }
+        else
+        {
+            Debug.LogWarning("LevelLoader: Player reference is missing. Could not reset player.");
         }
 
         levelSession.Initialize(levelData);
+        Debug.Log($"LevelLoader: Loaded level {levelData.levelNumber}");
+    }
+
+    private void AutoWire()
+    {
+        if (levelSession == null)
+        {
+            levelSession = GetComponent<LevelSession>();
+        }
+
+        if (player == null)
+        {
+            GameObject foundPlayer = GameObject.FindWithTag("Player");
+            if (foundPlayer != null)
+            {
+                player = foundPlayer.transform;
+            }
+        }
     }
 
     private void SpawnPlatforms(LevelData levelData)
@@ -108,7 +169,18 @@ public class LevelLoader : MonoBehaviour
 
     private void SpawnEnemy(LevelData levelData)
     {
-        Instantiate(enemyPrefab, levelData.enemyPosition, Quaternion.identity, actorsRoot);
+        GameObject enemy = Instantiate(enemyPrefab, levelData.enemyPosition, Quaternion.identity, actorsRoot);
+        CapsuleCollider2D cap = enemy.GetComponent<CapsuleCollider2D>();
+        if (cap == null)
+        {
+            cap = enemy.AddComponent<CapsuleCollider2D>();
+        }
+        cap.isTrigger = true;
+
+        if (enemy.GetComponent<EnemyHazard>() == null)
+        {
+            enemy.AddComponent<EnemyHazard>();
+        }
     }
 
     private void SpawnBasket(LevelData levelData)

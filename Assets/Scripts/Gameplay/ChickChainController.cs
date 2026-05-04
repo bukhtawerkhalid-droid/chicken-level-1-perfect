@@ -4,12 +4,14 @@ using UnityEngine;
 public class ChickChainController : MonoBehaviour
 {
     [SerializeField] private Transform chainRoot;
-    [SerializeField] private float segmentSpacing = 0.75f;
-    [SerializeField] private float followSpeed = 14f;
-    [SerializeField] private float minRecordDistance = 0.05f;
+    [SerializeField] private float segmentSpacing = 0.38f;
+    [SerializeField] private float followSpeed = 16f;
+    [SerializeField] private float minRecordDistance = 0.03f;
 
     private readonly List<Transform> followers = new List<Transform>();
     private readonly List<Vector3> history = new List<Vector3>();
+
+    public int Count => followers.Count;
 
     private void Awake()
     {
@@ -44,6 +46,25 @@ public class ChickChainController : MonoBehaviour
         }
     }
 
+    public bool RemoveLastFollower()
+    {
+        if (followers.Count == 0)
+        {
+            return false;
+        }
+
+        int idx = followers.Count - 1;
+        Transform last = followers[idx];
+        followers.RemoveAt(idx);
+
+        if (last != null)
+        {
+            Destroy(last.gameObject);
+        }
+
+        return true;
+    }
+
     private void RecordHeadPosition()
     {
         Vector3 current = transform.position;
@@ -52,7 +73,7 @@ public class ChickChainController : MonoBehaviour
             history.Insert(0, current);
         }
 
-        int maxHistory = Mathf.Max(256, followers.Count * 40);
+        int maxHistory = Mathf.Max(256, followers.Count * 48);
         if (history.Count > maxHistory)
         {
             history.RemoveRange(maxHistory, history.Count - maxHistory);

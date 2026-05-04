@@ -4,10 +4,13 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerMover2D : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float moveSpeed = 2.6f;
+    [SerializeField] private float acceleration = 12f;
 
     private Rigidbody2D rb;
     private float moveInputX;
+
+    public bool IsInputEnabled { get; set; } = true;
 
     private void Awake()
     {
@@ -16,6 +19,12 @@ public class PlayerMover2D : MonoBehaviour
 
     private void Update()
     {
+        if (!IsInputEnabled)
+        {
+            moveInputX = 0f;
+            return;
+        }
+
         moveInputX = 0f;
         Keyboard keyboard = Keyboard.current;
         if (keyboard != null)
@@ -27,6 +36,8 @@ public class PlayerMover2D : MonoBehaviour
 
     private void FixedUpdate()
     {
-        rb.linearVelocity = new Vector2(moveInputX * moveSpeed, rb.linearVelocity.y);
+        float targetX = moveInputX * moveSpeed;
+        float nextX = Mathf.MoveTowards(rb.linearVelocity.x, targetX, acceleration * Time.fixedDeltaTime);
+        rb.linearVelocity = new Vector2(nextX, rb.linearVelocity.y);
     }
 }

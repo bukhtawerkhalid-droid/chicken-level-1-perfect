@@ -46,6 +46,8 @@ public class LevelSession : MonoBehaviour
         {
             ui.SetLevel(levelData.levelNumber);
             ui.SetChicks(collectedChicks, minRequiredChicks);
+            ui.SetResult(string.Empty, string.Empty);
+            ui.SetTimeSeconds(Mathf.CeilToInt(levelData.levelTime));
         }
 
         if (timer == null)
@@ -75,6 +77,31 @@ public class LevelSession : MonoBehaviour
         }
     }
 
+    public void HandleEnemyTouch(ChickChainController chain)
+    {
+        if (levelEnded)
+        {
+            return;
+        }
+
+        if (collectedChicks > 0)
+        {
+            if (chain != null)
+            {
+                chain.RemoveLastFollower();
+            }
+
+            collectedChicks = Mathf.Max(0, collectedChicks - 1);
+            if (ui != null)
+            {
+                ui.SetChicks(collectedChicks, minRequiredChicks);
+            }
+            return;
+        }
+
+        EndLevel(false, "Cat caught you");
+    }
+
     public void TryCompleteLevel()
     {
         if (levelEnded)
@@ -102,7 +129,7 @@ public class LevelSession : MonoBehaviour
     {
         if (ui != null)
         {
-            ui.SetTime(GameTimer.FormatMMSS(time));
+            ui.SetTimeSeconds(Mathf.CeilToInt(time));
         }
     }
 
@@ -126,7 +153,7 @@ public class LevelSession : MonoBehaviour
 
         if (ui != null)
         {
-            ui.SetResult(won ? "WIN" : "LOSE", reason);
+            ui.SetResult(won ? "YOU WIN" : "YOU LOSE", reason);
         }
         OnLevelEnded?.Invoke(won, reason);
         Debug.Log($"Level ended. Won: {won}. Reason: {reason}");

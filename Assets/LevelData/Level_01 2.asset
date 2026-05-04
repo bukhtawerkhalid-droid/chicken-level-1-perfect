@@ -29,5 +29,6 @@ MonoBehaviour:
   playerStartPosition: {x: -2.09, y: 3.17}
   basketPosition: {x: 2.11, y: -2.86}
   enemyPosition: {x: -1.84, y: -2.89}
-  minChicksRequired: 10
-  levelTime: 60
+  minChicksRequired: 3
+  levelTime: 30
+
