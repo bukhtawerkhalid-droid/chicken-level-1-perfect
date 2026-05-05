@@ -17,6 +17,10 @@ public class PlayerMover2D : MonoBehaviour
     [SerializeField] private float bodyWidth = 0.25f;
     [SerializeField] private LayerMask groundLayer;
 
+    [Header("Landing & Friction")]
+    [SerializeField] private float landingDecelBoost = 2.0f;
+    [SerializeField] private float landingGripDuration = 0.3f;
+
     [Header("Visual Settings")]
     [SerializeField] private float tiltAmount = 15f;
     [SerializeField] private float tiltSpeed = 10f;
@@ -30,6 +34,9 @@ public class PlayerMover2D : MonoBehaviour
     private float inputBufferWindow = 0.15f;
     private float bufferedInputX;
 
+    // Landing Logic
+    private float landingGripTimer;
+
     public bool IsInputEnabled { get; set; } = true;
 
     private void Awake()
@@ -40,7 +47,6 @@ public class PlayerMover2D : MonoBehaviour
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
-        // Auto-assign ground layer if not set
         if (groundLayer == 0) groundLayer = LayerMask.GetMask("Default");
     }
 
@@ -48,6 +54,9 @@ public class PlayerMover2D : MonoBehaviour
     {
         HandleInput();
         HandleVisuals();
+        
+        // Update landing timer
+        if (landingGripTimer > 0) landingGripTimer -= Time.deltaTime;
     }
 
     private void HandleInput()
@@ -74,14 +83,12 @@ public class PlayerMover2D : MonoBehaviour
             rawInputX = (mouseX < screenWidth * 0.5f) ? -1f : 1f;
         }
 
-        // Input Buffering: Remember the last intentional move
         if (rawInputX != 0)
         {
             bufferedInputX = rawInputX;
             lastInputTime = Time.time;
         }
 
-        // Use buffered input if within window, else use current raw input
         if (Time.time - lastInputTime <= inputBufferWindow)
         {
             moveInputX = bufferedInputX;
@@ -113,11 +120,28 @@ public class PlayerMover2D : MonoBehaviour
         if (enableGapMagnet) ApplySmartAssistance();
     }
 
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        // If we hit something below us, trigger landing grip
+        if (collision.relativeVelocity.y > 0.5f)
+        {
+            landingGripTimer = landingGripDuration;
+        }
+    }
+
     private void ApplyMovement()
     {
         float targetXVelocity = moveInputX * moveSpeed;
         float currentXVelocity = rb.linearVelocity.x;
-        float activeRate = (Mathf.Abs(moveInputX) > 0.01f) ? acceleration : deceleration;
+        
+        // Use boosted deceleration if we just landed
+        float currentDecel = deceleration;
+        if (landingGripTimer > 0 && Mathf.Abs(moveInputX) < 0.01f)
+        {
+            currentDecel *= landingDecelBoost;
+        }
+
+        float activeRate = (Mathf.Abs(moveInputX) > 0.01f) ? acceleration : currentDecel;
         float newX = Mathf.MoveTowards(currentXVelocity, targetXVelocity, activeRate * Time.fixedDeltaTime);
 
         float currentYVelocity = rb.linearVelocity.y;
@@ -128,29 +152,20 @@ public class PlayerMover2D : MonoBehaviour
 
     private void ApplySmartAssistance()
     {
-        // Only assist when falling
         if (rb.linearVelocity.y > -0.5f) return;
 
-        // Cast rays down from left and right edges
         Vector2 originLeft = (Vector2)transform.position + new Vector2(-bodyWidth, 0);
         Vector2 originRight = (Vector2)transform.position + new Vector2(bodyWidth, 0);
 
         bool hitLeft = Physics2D.Raycast(originLeft, Vector2.down, raycastLength, groundLayer);
         bool hitRight = Physics2D.Raycast(originRight, Vector2.down, raycastLength, groundLayer);
 
-        // Debug visualization (visible in Scene view)
-        Debug.DrawRay(originLeft, Vector2.down * raycastLength, hitLeft ? Color.red : Color.green);
-        Debug.DrawRay(originRight, Vector2.down * raycastLength, hitRight ? Color.red : Color.green);
-
-        // If one side hits and the other doesn't, we are grazing an edge!
         if (hitLeft && !hitRight)
         {
-            // Nudge right into the gap
             rb.AddForce(Vector2.right * magnetStrength, ForceMode2D.Force);
         }
         else if (!hitLeft && hitRight)
         {
-            // Nudge left into the gap
             rb.AddForce(Vector2.left * magnetStrength, ForceMode2D.Force);
         }
     }
