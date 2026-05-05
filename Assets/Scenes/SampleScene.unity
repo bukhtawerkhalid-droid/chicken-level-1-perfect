@@ -2410,25 +2410,25 @@ MonoBehaviour:
   timeCounterText: {fileID: 0}
   resultText: {fileID: 0}
   chickCounterSettings:
-    color: {r: 0.39, g: 0.26, b: 0.13, a: 1}
+    color: {r: 0.21383637, g: 0.107926846, b: 0.0020172908, a: 1}
     font: {fileID: 0}
-    fontSize: 80
-    fontStyle: 0
-    localPosition: {x: 0, y: 0, z: 0}
+    fontSize: 160
+    fontStyle: 3
+    localPosition: {x: 0.85, y: -0.7, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   levelCounterSettings:
-    color: {r: 0.39, g: 0.26, b: 0.13, a: 1}
+    color: {r: 0.21568628, g: 0.10980392, b: 0.003921569, a: 1}
     font: {fileID: 0}
-    fontSize: 80
-    fontStyle: 0
-    localPosition: {x: 0, y: 0, z: 0}
+    fontSize: 130
+    fontStyle: 1
+    localPosition: {x: 0.17, y: -0.15, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   timeCounterSettings:
-    color: {r: 0.39, g: 0.26, b: 0.13, a: 1}
+    color: {r: 0.21568628, g: 0.10980392, b: 0.003921569, a: 1}
     font: {fileID: 0}
-    fontSize: 124
-    fontStyle: 0
-    localPosition: {x: 0, y: 0, z: 0}
+    fontSize: 400
+    fontStyle: 3
+    localPosition: {x: 1.21, y: -0.56, z: 0}
     localScale: {x: 1, y: 1, z: 1}
 --- !u!114 &1221351020
 MonoBehaviour:

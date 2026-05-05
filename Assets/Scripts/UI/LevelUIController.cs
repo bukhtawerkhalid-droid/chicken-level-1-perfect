@@ -8,6 +8,22 @@ public class LevelUIController : MonoBehaviour
     [SerializeField] private Text timeCounterText;
     [SerializeField] private Text resultText;
 
+    [System.Serializable]
+    public class CounterVisualSettings
+    {
+        public Color color = new Color(0.39f, 0.26f, 0.13f, 1.0f);
+        public Font font;
+        public int fontSize = 64;
+        public FontStyle fontStyle = FontStyle.Normal;
+        public Vector3 localPosition = Vector3.zero;
+        public Vector3 localScale = Vector3.one;
+    }
+
+    [Header("Visual Settings")]
+    public CounterVisualSettings chickCounterSettings;
+    public CounterVisualSettings levelCounterSettings;
+    public CounterVisualSettings timeCounterSettings;
+
     private TextMesh chickMesh;
     private TextMesh levelMesh;
     private TextMesh timeMesh;
@@ -15,59 +31,87 @@ public class LevelUIController : MonoBehaviour
     private void Awake()
     {
         // Initialize the meshes
-        chickMesh = EnsureCounterMesh("chick counter_0", "ChickCounterText", new Vector3(0.76f, -0.57f, -0.1f), new Vector3(2f, 2f, 1f), "Chicks 0/0");
+        chickMesh = EnsureCounterMesh("chick counter_0", "ChickCounterText", "Chicks 0/0", chickCounterSettings);
+        levelMesh = EnsureCounterMesh("level counter_0", "LevelCounterText", "Level 1", levelCounterSettings);
+        timeMesh = EnsureCounterMesh("Time counter_0", "TimeCounterText", "0s", timeCounterSettings);
         
-        levelMesh = EnsureCounterMesh("level counter_0", "LevelCounterText", new Vector3(0.2f, -0.18f, -0.1f), new Vector3(2f, 2f, 1f), "Level 1");
+        ApplyAllStyles();
+    }
 
-        timeMesh = EnsureCounterMesh("Time counter_0", "TimeCounterText", new Vector3(2.13f, -0.58f, -0.1f), new Vector3(3f, 3f, 1f), "0s");
+    private void OnValidate()
+    {
+        // This makes sure your manual settings in the Inspector show up immediately!
+        if (Application.isPlaying)
+        {
+            ApplyAllStyles();
+        }
+    }
+
+    public void ApplyAllStyles()
+    {
+        if (chickMesh != null) ApplyVisualSettings(chickMesh, chickCounterSettings);
+        if (levelMesh != null) ApplyVisualSettings(levelMesh, levelCounterSettings);
+        if (timeMesh != null) ApplyVisualSettings(timeMesh, timeCounterSettings);
+    }
+
+    private void ApplyVisualSettings(TextMesh mesh, CounterVisualSettings settings)
+    {
+        if (mesh == null || settings == null) return;
+
+        // Force the text to match YOUR Inspector settings exactly
+        mesh.transform.localPosition = settings.localPosition;
+        mesh.transform.localScale = settings.localScale;
+        mesh.color = settings.color;
+        mesh.fontSize = settings.fontSize;
+        mesh.fontStyle = settings.fontStyle;
+
+        if (settings.font != null)
+        {
+            mesh.font = settings.font;
+            MeshRenderer mr = mesh.GetComponent<MeshRenderer>();
+            if (mr != null) mr.material = settings.font.material;
+        }
+
+        mesh.characterSize = 0.08f;
+        mesh.anchor = TextAnchor.MiddleCenter;
+        mesh.alignment = TextAlignment.Center;
+        
+        MeshRenderer renderer = mesh.GetComponent<MeshRenderer>();
+        if (renderer != null)
+        {
+            renderer.sortingLayerName = "Default";
+            renderer.sortingOrder = 20;
+        }
     }
 
     public void SetChicks(int current, int required)
     {
         if (chickMesh == null) 
-            chickMesh = EnsureCounterMesh("chick counter_0", "ChickCounterText", new Vector3(0.76f, -0.57f, -0.1f), new Vector3(2f, 2f, 1f), "Chicks 0/0");
+            chickMesh = EnsureCounterMesh("chick counter_0", "ChickCounterText", "Chicks 0/0", chickCounterSettings);
 
         string text = $"Chicks {current}/{required}";
-        if (chickCounterText != null)
-        {
-            chickCounterText.text = text;
-        }
-        if (chickMesh != null)
-        {
-            chickMesh.text = text;
-        }
+        if (chickCounterText != null) chickCounterText.text = text;
+        if (chickMesh != null) chickMesh.text = text;
     }
 
     public void SetLevel(int levelNumber)
     {
         if (levelMesh == null)
-            levelMesh = EnsureCounterMesh("level counter_0", "LevelCounterText", new Vector3(0.2f, -0.18f, -0.1f), new Vector3(2f, 2f, 1f), "Level 1");
+            levelMesh = EnsureCounterMesh("level counter_0", "LevelCounterText", "Level 1", levelCounterSettings);
 
         string text = $"Level {levelNumber}";
-        if (levelCounterText != null)
-        {
-            levelCounterText.text = text;
-        }
-        if (levelMesh != null)
-        {
-            levelMesh.text = text;
-        }
+        if (levelCounterText != null) levelCounterText.text = text;
+        if (levelMesh != null) levelMesh.text = text;
     }
 
     public void SetTimeSeconds(int seconds)
     {
         if (timeMesh == null)
-            timeMesh = EnsureCounterMesh("Time counter_0", "TimeCounterText", new Vector3(2.13f, -0.58f, -0.1f), new Vector3(3f, 3f, 1f), "0s");
+            timeMesh = EnsureCounterMesh("Time counter_0", "TimeCounterText", "0s", timeCounterSettings);
 
         string text = $"{Mathf.Max(0, seconds)}s";
-        if (timeCounterText != null)
-        {
-            timeCounterText.text = text;
-        }
-        if (timeMesh != null)
-        {
-            timeMesh.text = text;
-        }
+        if (timeCounterText != null) timeCounterText.text = text;
+        if (timeMesh != null) timeMesh.text = text;
     }
 
     public void SetResult(string result, string reason)
@@ -78,68 +122,35 @@ public class LevelUIController : MonoBehaviour
         }
     }
 
-    private static TextMesh EnsureCounterMesh(string anchorName, string childName, Vector3 localOffset, Vector3 localScale, string defaultText)
+    private TextMesh EnsureCounterMesh(string anchorName, string childName, string defaultText, CounterVisualSettings settings)
     {
         GameObject anchor = GameObject.Find(anchorName);
         if (anchor == null)
         {
             GameObject[] allObjects = GameObject.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (GameObject obj in allObjects)
-            {
-                if (obj.name == anchorName)
-                {
-                    anchor = obj;
-                    break;
-                }
-            }
+            foreach (GameObject obj in allObjects) { if (obj.name == anchorName) { anchor = obj; break; } }
         }
 
-        if (anchor == null)
-        {
-            Debug.LogWarning($"LevelUIController: Could not find anchor '{anchorName}' in the scene!");
-            return null;
-        }
+        if (anchor == null) return null;
 
         Transform child = anchor.transform.Find(childName);
         GameObject go;
-        bool isNew = false;
         if (child == null)
         {
             go = new GameObject(childName);
             go.transform.SetParent(anchor.transform);
-            isNew = true;
-            Debug.Log($"LevelUIController: Created new text object '{childName}' under '{anchorName}'");
         }
         else
         {
             go = child.gameObject;
         }
 
-        go.transform.localPosition = localOffset;
-        go.transform.localScale = localScale;
-
         TextMesh mesh = go.GetComponent<TextMesh>();
-        if (mesh == null)
-        {
-            mesh = go.AddComponent<TextMesh>();
-            mesh.fontSize = 64;
-            mesh.characterSize = 0.08f;
-            mesh.anchor = TextAnchor.MiddleCenter;
-            mesh.alignment = TextAlignment.Center;
-            mesh.color = new Color(0.39f, 0.26f, 0.13f, 1.0f);
-        }
+        if (mesh == null) mesh = go.AddComponent<TextMesh>();
 
-        if (isNew || string.IsNullOrEmpty(mesh.text))
-        {
-            mesh.text = defaultText;
-        }
+        ApplyVisualSettings(mesh, settings);
 
-        MeshRenderer renderer = go.GetComponent<MeshRenderer>();
-        if (renderer != null)
-        {
-            renderer.sortingLayerName = "Default";
-            renderer.sortingOrder = 20;
-        }
+        if (string.IsNullOrEmpty(mesh.text)) mesh.text = defaultText;
 
         return mesh;
     }
