@@ -19,8 +19,17 @@ public class LevelFlowController : MonoBehaviour
 
     private bool hasStarted;
 
+    public static LevelFlowController Instance { get; private set; }
+
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+
         if (levelLoader == null) levelLoader = FindFirstObjectByType<LevelLoader>();
         if (levelSession == null) levelSession = FindFirstObjectByType<LevelSession>();
         if (playerMover == null) playerMover = FindFirstObjectByType<PlayerMover2D>();
