@@ -59,7 +59,8 @@ public class ChickChainController : MonoBehaviour
 
         if (last != null)
         {
-            Destroy(last.gameObject);
+            last.gameObject.SetActive(false);
+            last.SetParent(null); // Unparent so it doesn't follow the player while hidden
         }
 
         return true;
@@ -111,6 +112,14 @@ public class ChickChainController : MonoBehaviour
 
     public void ResetChain()
     {
+        foreach (var follower in followers)
+        {
+            if (follower != null)
+            {
+                follower.gameObject.SetActive(false);
+                follower.SetParent(null);
+            }
+        }
         followers.Clear();
         history.Clear();
         history.Add(transform.position);

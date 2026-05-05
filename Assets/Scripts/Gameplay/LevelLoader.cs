@@ -91,11 +91,12 @@ public class LevelLoader : MonoBehaviour
         if (enemyPrefab != null) SpawnEnemies(levelData);
         if (basketPrefab != null) SpawnBasket(levelData);
 
-        ResetManualObjects();
+        ResetManualObjects(levelData);
 
         if (player != null)
         {
             player.position = levelData.playerStartPosition;
+            player.rotation = Quaternion.identity; // Snap back to upright
             player.gameObject.SetActive(true);
 
             Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
@@ -211,9 +212,12 @@ public class LevelLoader : MonoBehaviour
 
     private void ClearRuntimeObjects()
     {
-        ClearChildren(platformsRoot);
-        ClearChildren(chicksRoot);
-        ClearChildren(actorsRoot);
+        if (platformPrefab != null) ClearChildren(platformsRoot);
+        if (chickPrefab != null) ClearChildren(chicksRoot);
+        if (enemyPrefab != null) ClearChildren(actorsRoot);
+        // Note: basketPrefab check not strictly needed if it's in actorsRoot, 
+        // but adding logic to clear actorsRoot only if we spawn something.
+        if (enemyPrefab == null && basketPrefab != null) ClearChildren(actorsRoot);
     }
 
     private void ClearChildren(Transform parent)
@@ -261,20 +265,42 @@ public class LevelLoader : MonoBehaviour
         return go.transform;
     }
 
-    private void ResetManualObjects()
+    private void ResetManualObjects(LevelData levelData)
     {
-        // Reset all chicks in the scene (manual or spawned)
-        ChickCollectible[] allChicks = FindObjectsByType<ChickCollectible>(FindObjectsSortMode.None);
-        foreach (var chick in allChicks)
-        {
-            chick.ResetCollectible();
-        }
-
-        // Reset the player's chain
+        // Reset the player's chain FIRST so it releases the followers
         ChickChainController chain = FindFirstObjectByType<ChickChainController>();
         if (chain != null)
         {
             chain.ResetChain();
+        }
+
+        // Reset all chicks in the scene (manual or spawned)
+        ChickCollectible[] allChicks = FindObjectsByType<ChickCollectible>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        
+        int requiredCount = levelData.chickPositions.Count;
+        // If we are using manual chicks and have no positions in LevelData, 
+        // maybe use a default or show all? 
+        // But usually LevelData should dictate the count.
+        
+        for (int i = 0; i < allChicks.Length; i++)
+        {
+            var chick = allChicks[i];
+            chick.ResetCollectible();
+            
+            // If this chick is extra (more than what the current level needs), hide it!
+            if (i >= requiredCount)
+            {
+                chick.gameObject.SetActive(false);
+            }
+            else
+            {
+                // Only move them if we are NOT on Level 1, 
+                // because Level 1 is usually the "default scene setup"
+                if (levelData.levelNumber > 1)
+                {
+                    chick.transform.position = levelData.chickPositions[i];
+                }
+            }
         }
     }
 }

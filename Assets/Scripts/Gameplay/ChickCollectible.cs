@@ -22,6 +22,8 @@ public class ChickCollectible : MonoBehaviour
         collected = false;
         transform.SetParent(initialParent);
         transform.position = initialPosition;
+        transform.rotation = Quaternion.identity;
+        gameObject.SetActive(true); // Ensure it comes back if hidden
         
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.isTrigger = true;

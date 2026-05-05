@@ -29,13 +29,15 @@ public class ScreenWrap2D : MonoBehaviour
             pos.x = leftLimit + 0.1f;
         }
 
-        // Vertical Abyss Recovery
+        // Vertical Abyss Safety (Clamp to bottom instead of teleporting)
         if (pos.y < verticalLimit)
         {
-            // Respawn at the top center if they fall off the map
-            pos.y = 8f; 
-            pos.x = 0;
-            if (rb != null) rb.linearVelocity = Vector2.zero;
+            pos.y = verticalLimit;
+            if (rb != null)
+            {
+                // Stop falling velocity but keep horizontal momentum
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Max(0, rb.linearVelocity.y));
+            }
         }
 
         transform.position = pos;

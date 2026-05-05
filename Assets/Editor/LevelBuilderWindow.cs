@@ -67,7 +67,7 @@ public class LevelBuilderWindow : EditorWindow
     private static List<Vector2> FindPositionsByPrefix(string prefix)
     {
         return Object.FindObjectsByType<Transform>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
-            .Where(t => t.name.StartsWith(prefix))
+            .Where(t => t.name.StartsWith(prefix) && !t.CompareTag("Player") && !t.name.Contains("character"))
             .Select(t => (Vector2)t.position)
             .ToList();
     }

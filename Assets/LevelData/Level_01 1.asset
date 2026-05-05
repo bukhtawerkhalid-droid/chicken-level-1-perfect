@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c08903004704164ead98da42a48573c, type: 3}
   m_Name: Level_01 1
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
-  levelNumber: 1
+  levelNumber: 2
   platformPositions:
   - {x: -1.46, y: 0.19}
   - {x: -2.38, y: -3.6599998}
