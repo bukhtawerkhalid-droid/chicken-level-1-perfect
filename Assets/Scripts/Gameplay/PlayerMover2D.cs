@@ -69,6 +69,8 @@ public class PlayerMover2D : MonoBehaviour
         }
 
         float rawInputX = 0f;
+        
+        // 1. Keyboard Support
         Keyboard keyboard = Keyboard.current;
         if (keyboard != null)
         {
@@ -76,11 +78,27 @@ public class PlayerMover2D : MonoBehaviour
             if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed) rawInputX += 1f;
         }
 
-        if (rawInputX == 0 && (Mouse.current?.leftButton.isPressed ?? false))
+        // 2. Touch/Mouse Support
+        if (rawInputX == 0)
         {
             float screenWidth = Screen.width;
-            float mouseX = Mouse.current.position.ReadValue().x;
-            rawInputX = (mouseX < screenWidth * 0.5f) ? -1f : 1f;
+            float inputPosX = -1f;
+
+            // Prefer explicit Touchscreen support
+            if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+            {
+                inputPosX = Touchscreen.current.primaryTouch.position.ReadValue().x;
+            }
+            // Fallback to Mouse (works for touch too in most cases)
+            else if (Mouse.current != null && Mouse.current.leftButton.isPressed)
+            {
+                inputPosX = Mouse.current.position.ReadValue().x;
+            }
+
+            if (inputPosX >= 0)
+            {
+                rawInputX = (inputPosX < screenWidth * 0.5f) ? -1f : 1f;
+            }
         }
 
         if (rawInputX != 0)

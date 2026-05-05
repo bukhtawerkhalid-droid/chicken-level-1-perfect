@@ -147,6 +147,14 @@ public class LevelLoader : MonoBehaviour
         foreach (Vector2 pos in levelData.platformPositions)
         {
             GameObject platform = Instantiate(platformPrefab, pos, Quaternion.identity, platformsRoot);
+            
+            // Fix: Explicitly set sorting order for visibility on mobile
+            SpriteRenderer sr = platform.GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                sr.sortingOrder = 0;
+            }
+
             BoxCollider2D col = platform.GetComponent<BoxCollider2D>();
             if (col == null)
             {

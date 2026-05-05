@@ -5,9 +5,18 @@ using System.IO;
 
 public class AndroidBuildTool : EditorWindow
 {
-    private string buildFolder = "Builds/Android";
+    private string buildFolder = "";
     private string fileName = "ChickenGame.apk";
     private bool developmentBuild = false;
+
+    private void OnEnable()
+    {
+        // Default to Desktop if not set
+        if (string.IsNullOrEmpty(buildFolder))
+        {
+            buildFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
+        }
+    }
 
     [MenuItem("Tools/Chicken Game/Android APK Builder")]
     public static void ShowWindow()
@@ -20,8 +29,20 @@ public class AndroidBuildTool : EditorWindow
         GUILayout.Label("Android Build Settings", EditorStyles.boldLabel);
         
         buildFolder = EditorGUILayout.TextField("Build Folder", buildFolder);
-        fileName = EditorGUILayout.TextField("APK Name", fileName);
+        if (GUILayout.Button("Select Folder"))
+        {
+            string selected = EditorUtility.OpenFolderPanel("Select Build Folder", buildFolder, "");
+            if (!string.IsNullOrEmpty(selected)) buildFolder = selected;
+        }
+
+        fileName = EditorGUILayout.TextField("Base APK Name", fileName);
         developmentBuild = EditorGUILayout.Toggle("Development Build", developmentBuild);
+
+        EditorGUILayout.Space();
+        
+        string timestamp = System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm");
+        string previewName = $"{Path.GetFileNameWithoutExtension(fileName)}_{timestamp}.apk";
+        GUILayout.Label($"Will save as: {previewName}", EditorStyles.miniLabel);
 
         EditorGUILayout.Space();
 
@@ -32,10 +53,9 @@ public class AndroidBuildTool : EditorWindow
 
         if (GUILayout.Button("Open Build Folder"))
         {
-            string fullPath = Path.Combine(Application.dataPath, "..", buildFolder);
-            if (Directory.Exists(fullPath))
+            if (Directory.Exists(buildFolder))
             {
-                Application.OpenURL("file://" + fullPath);
+                Application.OpenURL("file://" + buildFolder);
             }
             else
             {
@@ -46,13 +66,14 @@ public class AndroidBuildTool : EditorWindow
 
     private void BuildAPK()
     {
-        string fullFolder = Path.Combine(Application.dataPath, "..", buildFolder);
-        if (!Directory.Exists(fullFolder))
+        if (!Directory.Exists(buildFolder))
         {
-            Directory.CreateDirectory(fullFolder);
+            Directory.CreateDirectory(buildFolder);
         }
 
-        string fullPath = Path.Combine(fullFolder, fileName);
+        string timestamp = System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm");
+        string finalFileName = $"{Path.GetFileNameWithoutExtension(fileName)}_{timestamp}.apk";
+        string fullPath = Path.Combine(buildFolder, finalFileName);
 
         // Get all scenes in build settings
         string[] scenes = new string[EditorBuildSettings.scenes.Length];
